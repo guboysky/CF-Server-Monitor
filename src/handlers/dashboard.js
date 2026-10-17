@@ -1,3 +1,4 @@
+import { attachDailyTraffic } from '../database/dailyTraffic.js';
 import { checkAuth, simpleAuthResponse } from '../middleware/auth.js';
 import { getDashboardLatencyHistory, getLatestMetrics, getLatestMetricsForAllServers } from '../database/schema.js';
 import { getAllServers, getServerDetail } from '../utils/cache.js';
@@ -184,6 +185,7 @@ export async function handleServerAPI(request, env, sys) {
     getRealtimeStateForServers(env, [id])
   ]);
   mergeMetricsIntoServer(server, latestMetrics);
+  await attachDailyTraffic(env.DB, [server]);
   server.latestReportUpdates = realtimeState.latestReportUpdates;
   server.sysConfig = {
     long_history_points: Number(normalizeLongHistoryPoints(sys.long_history_points))
@@ -244,6 +246,7 @@ export async function handleServersAPI(request, env, sys) {
     }
   }
   
+  await attachDailyTraffic(env.DB, results, now);
   const globalOffline = results.length - globalOnline;
 
   const data = {
